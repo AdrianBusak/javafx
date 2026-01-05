@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.control.Separator?>
+<?import java.net.URL?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="hr.algebra.battleship.controller.BoardController"
+      spacing="20" style="-fx-padding: 20;">
+
+    <children>
+        <!-- Naslov -->
+        <Label text="⚓ BATTLESHIP ⚓" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: navy;">
+            <VBox.margin>
+                <Insets top="10" right="20" bottom="10" left="20"/>
+            </VBox.margin>
+        </Label>
+
+        <!-- ✅ RUČNO POSTAVLJANJE - Izbor Brodova (samo tijekom SETUP-a) -->
+        <HBox fx:id="setupPanel" spacing="10" alignment="CENTER"
+              style="-fx-padding: 10; -fx-border-color: #ddd; -fx-border-radius: 5;">
+            <children>
+                <Label text="📍 Odaberi Brod:" style="-fx-font-weight: bold;"/>
+
+                <Button fx:id="carrierBtn" text="Carrier (5)"
+                        style="-fx-padding: 8px 12px; -fx-font-size: 12px;"
+                        onAction="#selectCarrier"/>
+
+                <Button fx:id="battleshipBtn" text="Battleship (4)"
+                        style="-fx-padding: 8px 12px; -fx-font-size: 12px;"
+                        onAction="#selectBattleship"/>
+
+                <Button fx:id="cruiserBtn" text="Cruiser (3)"
+                        style="-fx-padding: 8px 12px; -fx-font-size: 12px;"
+                        onAction="#selectCruiser"/>
+
+                <Button fx:id="submarineBtn" text="Submarine (3)"
+                        style="-fx-padding: 8px 12px; -fx-font-size: 12px;"
+                        onAction="#selectSubmarine"/>
+
+                <Button fx:id="destroyerBtn" text="Destroyer (2)"
+                        style="-fx-padding: 8px 12px; -fx-font-size: 12px;"
+                        onAction="#selectDestroyer"/>
+
+                <Separator orientation="VERTICAL"/>
+
+                <Label text="🔄 Orijentacija:" style="-fx-font-weight: bold;"/>
+
+                <ToggleButton fx:id="horizontalBtn" text="→ Horizontal" selected="true"
+                              style="-fx-padding: 8px 12px; -fx-font-size: 12px;"
+                              onAction="#handleOrientationToggle"/>
+
+                <ToggleButton fx:id="verticalBtn" text="↓ Vertical"
+                              style="-fx-padding: 8px 12px; -fx-font-size: 12px;"
+                              onAction="#handleOrientationToggle"/>
+            </children>
+        </HBox>
+
+        <!-- ✅ NOVI - Ready i Random gumbi -->
+        <HBox spacing="15" alignment="CENTER" style="-fx-padding: 15; -fx-background-color: #f5f5f5; -fx-border-radius: 5;">
+            <children>
+                <Button fx:id="readyButton" text="✅ Ja Sam Spreman!"
+                        style="-fx-padding: 10px 20px; -fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;"/>
+            </children>
+        </HBox>
+
+
+        <!-- ✅ IGRANJE - Dva Boarda Sidebyside -->
+        <HBox spacing="40" alignment="TOP_CENTER">
+            <children>
+                <!-- LIJEVO: Tvoj Board (gdje protivnik napada) -->
+                <VBox spacing="10" alignment="TOP_CENTER">
+                    <Label text="🛡️ Tvoj Board"
+                           style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #333;"/>
+                    <GridPane fx:id="player1Board" hgap="1" vgap="1"
+                              style="-fx-background-color: transparent;">
+                    </GridPane>
+                </VBox>
+
+                <!-- SREDINA: Info Panel -->
+                <VBox spacing="15" alignment="TOP_CENTER" style="-fx-min-width: 280;">
+                    <Label fx:id="gameStatusLabel" text="Postavi brodove"
+                           style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #333; -fx-wrap-text: true;"/>
+
+                    <Label fx:id="currentPlayerLabel" text="Trenutni igrač: Igrač 1"
+                           style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+
+                    <Label fx:id="remainingShipsLabel" text="Preostali brodovi: 5"
+                           style="-fx-font-size: 14px;"/>
+
+                    <Separator/>
+
+                    <Button fx:id="resetButton" text="🔄 Reset"
+                            style="-fx-padding: 10px 20px; -fx-background-color: #ff4444; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;"/>
+                </VBox>
+
+                <!-- DESNO: Protivnički Board (gdje ti napadas) -->
+                <VBox spacing="10" alignment="TOP_CENTER">
+                    <Label text="🎯 Protivnički Board"
+                           style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #333;"/>
+                    <GridPane fx:id="player2Board" hgap="1" vgap="1"
+                              style="-fx-background-color: transparent;">
+                    </GridPane>
+                </VBox>
+            </children>
+        </HBox>
+
+        <!-- Kontrole -->
+        <HBox spacing="15" alignment="CENTER" style="-fx-padding: 15; -fx-background-color: #f5f5f5; -fx-border-radius: 5;">
+            <children>
+                <Button fx:id="placeRandomShipsBtn" text="🎲 Postavi Random Brodove"
+                        style="-fx-padding: 10px 20px; -fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;"/>
+
+                <Button fx:id="startGameBtn" text="▶️ Počni Igru"
+                        style="-fx-padding: 10px 20px; -fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;"
+                        disable="true"/>
+
+                <Button fx:id="saveGameBtn" text="💾 Spremi Igru"
+                        style="-fx-padding: 10px 20px; -fx-background-color: #FF9800; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;"/>
+            </children>
+        </HBox>
+    </children>
+
+    <!-- CSS Styles -->
+    <stylesheets>
+        <URL value="@boardView.css"/>
+    </stylesheets>
+</VBox>

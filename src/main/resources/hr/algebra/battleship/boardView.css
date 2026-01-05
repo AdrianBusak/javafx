@@ -1,0 +1,129 @@
+/* ======================== */
+/* CELL STYLES */
+/* ======================== */
+
+.cell-rectangle {
+    -fx-fill: #E3F2FD;
+    -fx-stroke: #90CAF9;
+    -fx-stroke-width: 0.5;
+}
+
+/* Subtle hover - bez drastičnih promjena */
+.cell-rectangle:hover {
+    -fx-fill: #BBDEFB;
+    -fx-stroke: #64B5F6;
+    -fx-stroke-width: 0.5;
+}
+
+.cell-hover {
+    -fx-fill: #BBDEFB;
+}
+
+.cell-ship {
+    -fx-fill: #424242;
+    -fx-stroke: #212121;
+    -fx-stroke-width: 0.5;
+}
+
+.cell-hit {
+    -fx-fill: #EF5350;
+    -fx-stroke: #C62828;
+    -fx-stroke-width: 1;
+}
+
+.cell-miss {
+    -fx-fill: #81D4FA;
+    -fx-stroke: #0277BD;
+    -fx-stroke-width: 0.5;
+}
+
+.cell-sunk {
+    -fx-fill: #D32F2F;
+    -fx-stroke: #B71C1C;
+    -fx-stroke-width: 1;
+}
+
+.cell-empty {
+    -fx-fill: #E3F2FD;
+    -fx-stroke: #90CAF9;
+    -fx-stroke-width: 0.5;
+}
+
+/* ======================== */
+/* BUTTON STYLES */
+/* ======================== */
+
+Button {
+    -fx-cursor: hand;
+    -fx-border-radius: 4;
+    -fx-font-size: 14px;
+}
+
+Button:hover {
+    -fx-opacity: 0.85;
+}
+
+Button:pressed {
+    -fx-opacity: 0.75;
+}
+
+Button:disabled {
+    -fx-opacity: 0.5;
+    -fx-cursor: not-allowed;
+}
+
+/* ======================== */
+/* TOGGLE BUTTON STYLES */
+/* ======================== */
+
+ToggleButton {
+    -fx-cursor: hand;
+    -fx-border-radius: 4;
+    -fx-padding: 8px 12px;
+    -fx-background-color: #BDBDBD;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 12px;
+}
+
+ToggleButton:selected {
+    -fx-background-color: #4CAF50;
+}
+
+ToggleButton:hover {
+    -fx-opacity: 0.85;
+}
+
+ToggleButton:disabled {
+    -fx-opacity: 0.5;
+    -fx-cursor: not-allowed;
+}
+
+/* ======================== */
+/* LABEL STYLES */
+/* ======================== */
+
+Label {
+    -fx-font-family: "Segoe UI", Arial, sans-serif;
+}
+
+/* ======================== */
+/* OTHER STYLES */
+/* ======================== */
+
+GridPane {
+    -fx-hgap: 1;
+    -fx-vgap: 1;
+}
+
+Separator {
+    -fx-padding: 0 5;
+}
+
+HBox {
+    -fx-spacing: 10;
+}
+
+VBox {
+    -fx-spacing: 10;
+}

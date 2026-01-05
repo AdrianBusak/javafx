@@ -1,0 +1,17 @@
+module hr.algebra.battleship {
+    requires javafx.controls;
+    requires javafx.fxml;
+    requires java.desktop;
+
+    // ✅ BITNO - jer koristiš hr.algebra.battleship.views paket
+    opens hr.algebra.battleship.views to javafx.fxml;
+    opens hr.algebra.battleship.controller to javafx.fxml;
+
+    exports hr.algebra.battleship.views;
+    exports hr.algebra.battleship.controller;
+    exports hr.algebra.battleship.gameEngine;
+    exports hr.algebra.battleship.model.game;
+    exports hr.algebra.battleship.model.ships;
+    exports hr.algebra.battleship.model.enums;
+    exports hr.algebra.battleship.services;
+}
