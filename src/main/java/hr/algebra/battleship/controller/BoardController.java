@@ -1,9 +1,11 @@
 package hr.algebra.battleship.controller;
+
 import hr.algebra.battleship.gameEngine.GameEngine;
 import hr.algebra.battleship.model.enums.*;
 import hr.algebra.battleship.model.game.*;
 import hr.algebra.battleship.model.ships.*;
 import hr.algebra.battleship.services.*;
+import hr.algebra.battleship.views.BattleshipApplication;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -14,6 +16,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.shape.Rectangle;
 import javafx.animation.PauseTransition;
 import javafx.util.Duration;
+
 import java.net.URL;
 import java.util.*;
 
@@ -21,7 +24,8 @@ public class BoardController implements Initializable {
 
     @FXML private GridPane player1Board, player2Board;
     @FXML private Label gameStatusLabel, currentPlayerLabel, remainingShipsLabel;
-    @FXML private Button resetButton, placeRandomShipsBtn, startGameBtn, saveGameBtn;
+    @FXML private Label player1BoardLabel, player2BoardLabel;
+    @FXML private Button resetButton, placeRandomShipsBtn, startGameBtn, saveGameBtn, readyButton;
     @FXML private HBox setupPanel;
 
     @FXML private Button carrierBtn, battleshipBtn, cruiserBtn, submarineBtn, destroyerBtn;
@@ -39,6 +43,9 @@ public class BoardController implements Initializable {
     private Ship selectedShip;
     private Orientation selectedOrientation = Orientation.HORIZONTAL;
 
+    private boolean player1Ready = false, player2Ready = false, boardLocked = false;
+    private int lastAttackRow = -1, lastAttackCol = -1;
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         gameEngine = GameEngine.getInstance();
@@ -54,6 +61,7 @@ public class BoardController implements Initializable {
 
         initializeBoards();
         setupEventHandlers();
+        updateBoardLabelsForCurrentPlayer();
         resetGame();
     }
 
@@ -62,7 +70,19 @@ public class BoardController implements Initializable {
         boardUIService.createBoardGrid(player2Board, true, this::handleCellClick);
     }
 
-    // ✅ RUČNO POSTAVLJANJE - Izbor brodova
+    private boolean isSinglePlayer() {
+        return BattleshipApplication.playerType == PlayerType.SINGLE_PLAYER;
+    }
+
+    private boolean isMultiplayer() {
+        return BattleshipApplication.playerType == PlayerType.PLAYER_1 ||
+                BattleshipApplication.playerType == PlayerType.PLAYER_2;
+    }
+
+    private boolean isPlayer1() {
+        return BattleshipApplication.playerType == PlayerType.PLAYER_1;
+    }
+
     @FXML private void selectCarrier() { selectShip(new Carrier()); }
     @FXML private void selectBattleship() { selectShip(new Battleship()); }
     @FXML private void selectCruiser() { selectShip(new Cruiser()); }
@@ -83,8 +103,7 @@ public class BoardController implements Initializable {
         gameStatusLabel.setText("📍 " + ship.getType() + " (" + playerName + ") - Klikni na svoj board!");
     }
 
-    @FXML
-    private void handleOrientationToggle() {
+    @FXML private void handleOrientationToggle() {
         horizontalBtn.setSelected(!verticalBtn.isSelected());
         verticalBtn.setSelected(!horizontalBtn.isSelected());
         selectedOrientation = horizontalBtn.isSelected()
@@ -93,10 +112,23 @@ public class BoardController implements Initializable {
     }
 
     private void handleCellClick(Rectangle cell, int row, int col, boolean isOpponent) {
-// ✅ Tijekom SETUP-a - postavi brodove
-        if (gameData.getGameState() == GameState.SETUP) {
-            boolean currentIsPlayer1 = gameData.getCurrentPlayerIndex() == 0;
+        System.out.println("🖱️ Klik na [" + row + ", " + col + "]");
+        System.out.println("   GameState: " + gameData.getGameState());
 
+        if (gameData.getGameState() == GameState.SETUP) {
+            handleSetupPhase(cell, row, col);
+            return;
+        }
+
+        if (gameData.getGameState() == GameState.PLAYING) {
+            handlePlayingPhase(cell, row, col);
+        }
+    }
+
+    private void handleSetupPhase(Rectangle cell, int row, int col) {
+        boolean currentIsPlayer1 = gameData.getCurrentPlayerIndex() == 0;
+
+        if (isSinglePlayer()) {
             if (currentIsPlayer1 && cell.getParent() != player1Board) {
                 gameStatusLabel.setText("⚠️ Klikni na svoj board (Igrač 1)!");
                 return;
@@ -106,64 +138,98 @@ public class BoardController implements Initializable {
                 gameStatusLabel.setText("⚠️ Klikni na svoj board (Igrač 2)!");
                 return;
             }
-
-            if (selectedShip != null) {
-                handleManualShipPlacement(row, col);
-            } else {
-                gameStatusLabel.setText("⚠️ Prvo odaberi brod!");
+        } else {
+            if (cell.getParent() != player1Board) {
+                gameStatusLabel.setText("⚠️ Klikni na svoj board!");
+                return;
             }
+        }
+
+        if (selectedShip != null) {
+            handleManualShipPlacement(row, col);
+        } else {
+            gameStatusLabel.setText("⚠️ Prvo odaberi brod!");
+        }
+    }
+
+    private void handlePlayingPhase(Rectangle cell, int row, int col) {
+        if (isMultiplayer() && boardLocked) {
+            gameStatusLabel.setText("⏳ Čekaj potez protivnika...");
+            currentPlayerLabel.setText("🟢 Čekaš...");
             return;
         }
 
-// ✅ Tijekom igre - napad
-        if (gameData.getGameState() == GameState.PLAYING) {
-            boolean currentIsPlayer1 = gameData.getCurrentPlayerIndex() == 0;
+        boolean clickedOnPlayer2Board = cell.getParent() == player2Board;
 
-// Provjeri koji board koristi trenutni igrač
-// Ako je Player 1: lijevo je njegov board, desno je protivnički
-// Ako je Player 2: lijevo je njegove board, desno je protivnički
-// ALI: player1Board sadrži Player 1, player2Board sadrži Player 2
+        System.out.println("👆 Klik na: " + (clickedOnPlayer2Board ? "player2Board" : "player1Board"));
 
-// Tijekom PLAYING:
-// - player1Board prikazuje trenutni igrač (može biti P1 ili P2 ovisno o logici)
-// - player2Board prikazuje protivnika
+        if (!clickedOnPlayer2Board) {
+            gameStatusLabel.setText("⚠️ Klikni na Protivnički Board (desno)!");
+            return;
+        }
 
-// Trebam kliknuti na DESNI board (protivnički)
-            boolean clickedOnLeftBoard = (cell.getParent() == player1Board);
-            boolean clickedOnRightBoard = (cell.getParent() == player2Board);
-
-            if (!clickedOnRightBoard) {
-                gameStatusLabel.setText("⚠️ Klikni na Protivnički Board (desno)!");
-                return;
+        try {
+            // FIX: Za single player koristi gameData.getPlayers(), za multi koristi player1 i player2
+            Player opponent;
+            if (isSinglePlayer()) {
+                int currentPlayerIndex = gameData.getCurrentPlayerIndex();
+                opponent = gameData.getPlayers().get((currentPlayerIndex + 1) % 2);
+            } else {
+                // MULTIPLAYER: opponent je uvijek player2
+                opponent = player2;
             }
 
-            try {
-                AttackResult result = gameEngine.attack(row, col);
+            System.out.println("🎯 Napadam: " + opponent.getName());
 
-                Rectangle targetCell = findCellInGrid(player2Board, row, col);
+            Cell targetCell = opponent.getBoard().getCell(row, col);
+            if (targetCell == null) return;
 
-                if (targetCell != null) {
-                    boardUIService.updateCellStyle(targetCell,
-                            result == AttackResult.MISS ? CellState.MISS : CellState.HIT);
-                    visualizationService.animateAttack(targetCell, result);
-                }
+            AttackResult result = targetCell.attack();
+            lastAttackRow = row;
+            lastAttackCol = col;
 
-                updateGameStatus(result);
+            System.out.println("✅ Rezultat: " + result);
 
-                if (result != AttackResult.WIN) {
-                    PauseTransition pause = new PauseTransition(Duration.millis(800));
-                    pause.setOnFinished(e -> {
+            if (result == AttackResult.SUNK && opponent.getBoard().getShips().stream()
+                    .allMatch(Ship::isSunk)) {
+                result = AttackResult.WIN;
+                gameData.setGameState(GameState.GAME_OVER);
+            }
+
+            Rectangle cellRect = findCellInGrid(player2Board, row, col);
+
+            if (cellRect != null) {
+                boardUIService.updateCellStyle(cellRect,
+                        result == AttackResult.MISS ? CellState.MISS : CellState.HIT);
+                visualizationService.animateAttack(cellRect, result);
+            }
+
+            updateGameStatus(result);
+
+            if (result != AttackResult.WIN) {
+                PauseTransition pause = new PauseTransition(Duration.millis(800));
+                pause.setOnFinished(e -> {
+                    if (isSinglePlayer()) {
                         switchTurn();
-// ✅ PREBACI BOARDOVE ZA SLJEDEĆEG IGRAČA
                         swapBoardsForNextPlayer();
-                    });
-                    pause.play();
-                } else {
-                    endGame();
+                        updateBoardLabelsForCurrentPlayer();
+                    } else {
+                        boardLocked = true;
+                        currentPlayerLabel.setText("🟢 Čekaš...");
+                        gameStatusLabel.setText("⏳ Čekaj potez protivnika...");
+                        sendGameStateToOpponent();
+                    }
+                });
+                pause.play();
+            } else {
+                endGame();
+                if (isMultiplayer()) {
+                    sendGameStateToOpponent();
                 }
-            } catch (Exception e) {
-                System.err.println("Greška pri napadu: " + e.getMessage());
             }
+        } catch (Exception e) {
+            System.err.println("❌ Greška: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -188,33 +254,45 @@ public class BoardController implements Initializable {
             return;
         }
 
-        GridPane currentBoard = gameData.getCurrentPlayerIndex() == 0
-                ? player1Board : player2Board;
+        Player targetPlayer;
+        if (isMultiplayer()) {
+            targetPlayer = isPlayer1() ? player1 : player2;
+        } else {
+            targetPlayer = currentPlayer;
+        }
 
-        boolean placed = currentPlayer.getBoard()
+        boolean placed = targetPlayer.getBoard()
                 .placeShip(selectedShip, row, col, selectedOrientation);
 
         if (placed) {
-            boardUIService.updateBoardVisuals(currentBoard, currentPlayer, false);
+            GridPane currentBoard = isSinglePlayer() ?
+                    (gameData.getCurrentPlayerIndex() == 0 ? player1Board : player2Board) :
+                    player1Board;
+
+            boardUIService.updateBoardVisuals(currentBoard, targetPlayer, false);
             gameStatusLabel.setText("✅ Brod postavljen!");
 
             selectedShip = null;
 
-            int shipsCount = currentPlayer.getBoard().getShips().size();
+            int shipsCount = targetPlayer.getBoard().getShips().size();
             remainingShipsLabel.setText("Preostali brodovi: " + (5 - shipsCount));
 
             if (shipsCount >= 5) {
-                if (gameData.getCurrentPlayerIndex() == 0) {
-                    gameData.setCurrentPlayerIndex(1);
-                    currentPlayerLabel.setText("Trenutni igrač: Igrač 2");
-                    gameStatusLabel.setText("🚢 Igrač 2 - Postavi svoje brodove!");
-                    remainingShipsLabel.setText("Preostali brodovi: 5");
+                if (isSinglePlayer()) {
+                    if (gameData.getCurrentPlayerIndex() == 0) {
+                        gameData.setCurrentPlayerIndex(1);
+                        updateBoardLabelsForCurrentPlayer();
+                        currentPlayerLabel.setText("Trenutni igrač: Igrač 2");
+                        gameStatusLabel.setText("🚢 Igrač 2 - Postavi svoje brodove!");
+                        remainingShipsLabel.setText("Preostali brodovi: 5");
+                    } else {
+                        gameStatusLabel.setText("✅ Svi brodovi postavljeni!");
+                        startGameBtn.setDisable(false);
+                    }
                 } else {
-                    gameStatusLabel.setText("✅ Svi brodovi postavljeni!");
-                    startGameBtn.setDisable(false);
+                    gameStatusLabel.setText("✅ Svi brodovi postavljeni! Klikni Ready!");
+                    readyButton.setDisable(false);
                 }
-            } else {
-                gameStatusLabel.setText("📍 Postavi sljedeći brod!");
             }
         } else {
             gameStatusLabel.setText("❌ Nemoguće postaviti brod!");
@@ -239,64 +317,43 @@ public class BoardController implements Initializable {
     }
 
     private void switchTurn() {
-        turnService.switchTurn();
-        Player currentPlayer = turnService.getCurrentPlayer();
-        currentPlayerLabel.setText("Red je: " + currentPlayer.getName());
-        gameStatusLabel.setText(currentPlayer.getName() + " je na potezu!");
+        gameData.setCurrentPlayerIndex((gameData.getCurrentPlayerIndex() + 1) % 2);
     }
 
-    // ✅ NOVO - Prebaci boardove za sljedećeg igrača
+    private void updateBoardLabelsForCurrentPlayer() {
+        if (player1BoardLabel == null || player2BoardLabel == null) return;
+
+        int currentPlayerIndex = gameData.getCurrentPlayerIndex();
+        boolean isCurrentPlayerPlayer1 = (currentPlayerIndex == 0);
+
+        if (isSinglePlayer()) {
+            if (isCurrentPlayerPlayer1) {
+                player1BoardLabel.setText("🛡️ Moj Board (Player 1)");
+                player2BoardLabel.setText("🎯 Protivnički Board (Player 2)");
+            } else {
+                player1BoardLabel.setText("🛡️ Moj Board (Player 2)");
+                player2BoardLabel.setText("🎯 Protivnički Board (Player 1)");
+            }
+        } else {
+            player1BoardLabel.setText("🛡️ Moji brodovi");
+            player2BoardLabel.setText("🎯 Napadam ovdje");
+        }
+    }
+
     private void swapBoardsForNextPlayer() {
         int currentPlayerIndex = gameData.getCurrentPlayerIndex();
         Player currentPlayer = gameData.getPlayers().get(currentPlayerIndex);
-        Player opponentPlayer = gameData.getPlayers().get((currentPlayerIndex + 1) % 2);
+        Player opponent = gameData.getPlayers().get((currentPlayerIndex + 1) % 2);
 
-// ✅ Lijevo: Tvoj board (sa brodovima)
-// ✅ Desno: Protivnički board (samo napadi vidljivi)
+        System.out.println("🔄 Swap: Sada je Player " + (currentPlayerIndex + 1));
 
-// Ovisno o tome koja je igrač na potezu:
-        if (currentPlayerIndex == 0) {
-// Player 1 je na potezu
-// Lijevo (player1Board) = Player 1 board sa brodovima
-// Desno (player2Board) = Player 2 board sa napadima
-            boardUIService.updateBoardVisuals(player1Board, player1, false);
-            hideBrodsOnBoard(player2Board, player2);
-        } else {
-// Player 2 je na potezu
-// Lijevo (player1Board) = Player 2 board sa brodovima
-// Desno (player2Board) = Player 1 board sa napadima
+        boardUIService.updateBoardVisuals(player1Board, currentPlayer, false);
+        hideBrodsOnBoard(player2Board, opponent);
 
-// Prebaci prikaz: player1Board postaje Player 2 board
-            boardUIService.updateBoardVisuals(player1Board, player2, false);
-// player2Board postaje Player 1 board (sa napadima)
-            hideBrodsOnBoard(player2Board, player1);
-        }
+        currentPlayerLabel.setText("🔴 Player " + (currentPlayerIndex + 1) + " - TVOJ RED!");
     }
 
-    // ✅ Sakrij brodove na boardu ali prikaži napade
-    private void hideBrodsOnBoard(GridPane grid, Player player) {
-        for (var child : grid.getChildren()) {
-            if (child instanceof Rectangle rect) {
-                Integer row = GridPane.getRowIndex(rect);
-                Integer col = GridPane.getColumnIndex(rect);
-
-                if (row == null || col == null) continue;
-
-                Cell cell = player.getBoard().getCell(row, col);
-                rect.getStyleClass().clear();
-                rect.getStyleClass().add("cell-rectangle");
-
-                if (cell.getState() == CellState.HIT) {
-                    rect.getStyleClass().add("cell-hit");
-                } else if (cell.getState() == CellState.MISS) {
-                    rect.getStyleClass().add("cell-miss");
-                }
-            }
-        }
-    }
-
-    @FXML
-    private void handlePlaceRandomShips() {
+    @FXML private void handlePlaceRandomShips() {
         Player currentPlayer = gameData.getPlayers()
                 .get(gameData.getCurrentPlayerIndex());
 
@@ -305,50 +362,125 @@ public class BoardController implements Initializable {
             return;
         }
 
-        gameSetupService.placeShipsForCurrentPlayer();
+        Player targetPlayer;
+        if (isMultiplayer()) {
+            targetPlayer = isPlayer1() ? player1 : player2;
+        } else {
+            targetPlayer = currentPlayer;
+        }
 
-        GridPane currentBoard = gameData.getCurrentPlayerIndex() == 0
-                ? player1Board : player2Board;
+        gameSetupService.placeShipsForPlayer(targetPlayer);
 
-        boardUIService.updateBoardVisuals(currentBoard, currentPlayer, false);
+        GridPane currentBoard = isSinglePlayer() ?
+                (gameData.getCurrentPlayerIndex() == 0 ? player1Board : player2Board) :
+                player1Board;
+
+        boardUIService.updateBoardVisuals(currentBoard, targetPlayer, false);
         gameStatusLabel.setText("🎲 Random brodovi postavljeni!");
 
-        int shipsCount = currentPlayer.getBoard().getShips().size();
+        int shipsCount = targetPlayer.getBoard().getShips().size();
 
         if (shipsCount >= 5) {
-            if (gameData.getCurrentPlayerIndex() == 0) {
-                gameData.setCurrentPlayerIndex(1);
-                currentPlayerLabel.setText("Trenutni igrač: Igrač 2");
-                gameStatusLabel.setText("🚢 Igrač 2 - Postavi brodove!");
-                remainingShipsLabel.setText("Preostali brodovi: 5");
-                selectedShip = null;
+            if (isSinglePlayer()) {
+                if (gameData.getCurrentPlayerIndex() == 0) {
+                    gameData.setCurrentPlayerIndex(1);
+                    updateBoardLabelsForCurrentPlayer();
+                    currentPlayerLabel.setText("Trenutni igrač: Igrač 2");
+                    gameStatusLabel.setText("🚢 Igrač 2 - Postavi brodove!");
+                    remainingShipsLabel.setText("Preostali brodovi: 5");
+                    selectedShip = null;
+                } else {
+                    gameStatusLabel.setText("✅ Svi brodovi postavljeni!");
+                    startGameBtn.setDisable(false);
+                }
             } else {
-                gameStatusLabel.setText("✅ Svi brodovi postavljeni!");
-                startGameBtn.setDisable(false);
+                gameStatusLabel.setText("🎲 Svi brodovi postavljeni! Klikni Ready!");
+                readyButton.setDisable(false);
             }
         }
     }
 
-    @FXML
-    private void handleStartGame() {
-        if (!gameSetupService.isSetupComplete()) {
-            gameStatusLabel.setText("❌ Svi trebaju postaviti brodove!");
+    @FXML private void handleReady() {
+        Player currentPlayer = isPlayer1() ? player1 : player2;
+
+        if (currentPlayer.getBoard().getShips().size() < 5) {
+            gameStatusLabel.setText("❌ Moraš postaviti 5 brodova!");
             return;
+        }
+
+        if (isPlayer1()) {
+            player1Ready = true;
+        } else {
+            player2Ready = true;
+        }
+
+        readyButton.setDisable(true);
+        gameStatusLabel.setText("✅ Spreman/na! Čekam protivnika...");
+
+        GameStateMessage message = new GameStateMessage();
+        message.setGameState(GameState.SETUP);
+        if (isPlayer1()) {
+            message.setPlayer1Board(player1.getBoard());
+            BattleshipApplication.sendRequestToPlayer2(message);
+        } else {
+            message.setPlayer2Board(player2.getBoard());
+            BattleshipApplication.sendRequestToPlayer1(message);
+        }
+    }
+
+    @FXML private void handleStartGame() {
+        if (isSinglePlayer()) {
+            if (player1.getBoard().getShips().size() < 5 || player2.getBoard().getShips().size() < 5) {
+                gameStatusLabel.setText("❌ Svi trebaju postaviti brodove!");
+                return;
+            }
+        } else {
+            if (!player1Ready || !player2Ready) {
+                gameStatusLabel.setText("❌ Oba igrača trebaju biti ready!");
+                return;
+            }
         }
 
         gameData.setCurrentPlayerIndex(0);
         gameData.setGameState(GameState.PLAYING);
         gameStatusLabel.setText("▶️ Igra je počela!");
-        currentPlayerLabel.setText("Red je: Igrač 1");
 
         setupPanel.setVisible(false);
         setupPanel.setManaged(false);
 
-// ✅ Prikaži Player 1 board sa brodovima i Player 2 sa napadima
-        boardUIService.updateBoardVisuals(player1Board, player1, false);
-        hideBrodsOnBoard(player2Board, player2);
+        if (isSinglePlayer()) {
+            updateBoardLabelsForCurrentPlayer();
+            currentPlayerLabel.setText("🔴 Player 1 - TVOJ RED!");
+            boardUIService.updateBoardVisuals(player1Board, player1, false);
+            hideBrodsOnBoard(player2Board, player2);
+        } else {
+            boardUIService.updateBoardVisuals(player1Board, player1, false);
+            boardUIService.updateBoardVisuals(player2Board, player2, true);
+
+            if (isPlayer1()) {
+                currentPlayerLabel.setText("🔴 TVOJ RED!");
+            } else {
+                currentPlayerLabel.setText("🟢 Čekaš...");
+                boardLocked = true;
+            }
+
+            updateBoardLabelsForCurrentPlayer();
+
+            GameStateMessage message = new GameStateMessage();
+            message.setGameState(GameState.PLAYING);
+            message.setAttackRow(-1);
+            message.setAttackCol(-1);
+
+            if (isPlayer1()) {
+                BattleshipApplication.sendRequestToPlayer2(message);
+            } else {
+                BattleshipApplication.sendRequestToPlayer1(message);
+            }
+        }
 
         placeRandomShipsBtn.setDisable(true);
+        readyButton.setDisable(true);
+        startGameBtn.setDisable(true);
         carrierBtn.setDisable(true);
         battleshipBtn.setDisable(true);
         cruiserBtn.setDisable(true);
@@ -358,8 +490,7 @@ public class BoardController implements Initializable {
         verticalBtn.setDisable(true);
     }
 
-    @FXML
-    private void handleSaveGame() {
+    @FXML private void handleSaveGame() {
         try {
             saveGameState();
             gameStatusLabel.setText("💾 Igra je spremljena!");
@@ -381,8 +512,7 @@ public class BoardController implements Initializable {
         System.out.println("Spremi igru:\n" + sb.toString());
     }
 
-    @FXML
-    private void handleReset() {
+    @FXML private void handleReset() {
         resetGame();
     }
 
@@ -409,11 +539,19 @@ public class BoardController implements Initializable {
         setupPanel.setVisible(true);
         setupPanel.setManaged(true);
 
-        gameStatusLabel.setText("🚢 Igrač 1 - Postavi brodove!");
-        currentPlayerLabel.setText("Trenutni igrač: Igrač 1");
+        if (isSinglePlayer()) {
+            gameStatusLabel.setText("🚢 Igrač 1 - Postavi brodove!");
+            currentPlayerLabel.setText("Trenutni igrač: Igrač 1");
+        } else {
+            String playerLabel = isPlayer1() ? "Player 1" : "Player 2";
+            gameStatusLabel.setText("🚢 " + playerLabel + " - Postavi brodove!");
+            currentPlayerLabel.setText("Postava: " + playerLabel);
+        }
+
         remainingShipsLabel.setText("Preostali brodovi: 5");
 
         placeRandomShipsBtn.setDisable(false);
+        readyButton.setDisable(true);
         startGameBtn.setDisable(true);
 
         carrierBtn.setDisable(false);
@@ -428,24 +566,146 @@ public class BoardController implements Initializable {
         selectedOrientation = Orientation.HORIZONTAL;
         horizontalBtn.setSelected(true);
         verticalBtn.setSelected(false);
+
+        player1Ready = false;
+        player2Ready = false;
+        boardLocked = false;
+        lastAttackRow = -1;
+        lastAttackCol = -1;
     }
 
     private void endGame() {
         gameData.setGameState(GameState.GAME_OVER);
-        String winner = turnService.getCurrentPlayer().getName();
-        gameStatusLabel.setText("🎉 " + winner + " POBIJEDIO!");
-        currentPlayerLabel.setText("IGRA JE GOTOVA!");
+
+        if (isSinglePlayer()) {
+            String winner = gameData.getCurrentPlayerIndex() == 0 ? "Igrač 1" : "Igrač 2";
+            gameStatusLabel.setText("🎉 " + winner + " POBIJEDIO!");
+            currentPlayerLabel.setText("IGRA JE GOTOVA!");
+        } else {
+            boolean iWon = (isPlayer1() && player2.getBoard().getShips().stream().allMatch(Ship::isSunk)) ||
+                    (!isPlayer1() && player1.getBoard().getShips().stream().allMatch(Ship::isSunk));
+
+            if (iWon) {
+                gameStatusLabel.setText("🎉 TI SI POBIJEDIO!");
+                currentPlayerLabel.setText("POBJEDA!");
+            } else {
+                gameStatusLabel.setText("💔 IZGUBIO SI!");
+                currentPlayerLabel.setText("PORAZ!");
+            }
+        }
+    }
+
+    private void hideBrodsOnBoard(GridPane grid, Player player) {
+        for (var child : grid.getChildren()) {
+            if (child instanceof Rectangle rect) {
+                Integer row = GridPane.getRowIndex(rect);
+                Integer col = GridPane.getColumnIndex(rect);
+
+                if (row == null || col == null) continue;
+
+                Cell cell = player.getBoard().getCell(row, col);
+                rect.getStyleClass().clear();
+                rect.getStyleClass().add("cell-rectangle");
+
+                if (cell.getState() == CellState.HIT) {
+                    rect.getStyleClass().add("cell-hit");
+                } else if (cell.getState() == CellState.MISS) {
+                    rect.getStyleClass().add("cell-miss");
+                }
+            }
+        }
+    }
+
+    private void sendGameStateToOpponent() {
+        GameStateMessage message = new GameStateMessage();
+        message.setGameState(GameState.PLAYING);
+        message.setAttackRow(lastAttackRow);
+        message.setAttackCol(lastAttackCol);
+
+        if (isPlayer1()) {
+            BattleshipApplication.sendRequestToPlayer2(message);
+        } else {
+            BattleshipApplication.sendRequestToPlayer1(message);
+        }
+    }
+
+    public void restoreGameState(GameStateMessage message) {
+        System.out.println("📥 restoreGameState");
+
+        if (!isMultiplayer()) return;
+
+        if (message.getGameState() == GameState.SETUP) {
+            handleSetupRestoration(message);
+        } else if (message.getGameState() == GameState.PLAYING) {
+            handlePlayingRestoration(message);
+        }
+    }
+
+    private void handleSetupRestoration(GameStateMessage message) {
+        if (isPlayer1() && message.getPlayer2Board() != null) {
+            player2.setBoard(message.getPlayer2Board());
+            player2Ready = true;
+            gameStatusLabel.setText("📥 Primio board od Player 2!");
+        }
+
+        if (!isPlayer1() && message.getPlayer1Board() != null) {
+            player1.setBoard(message.getPlayer1Board());
+            player1Ready = true;
+            gameStatusLabel.setText("📥 Primio board od Player 1!");
+        }
+
+        if (player1Ready && player2Ready) {
+            startGameBtn.setDisable(false);
+            gameStatusLabel.setText("✅ Obje su spremne! Klikni Start!");
+        }
+    }
+
+    private void handlePlayingRestoration(GameStateMessage message) {
+        System.out.println("🎯 handlePlayingRestoration");
+
+        gameData.setGameState(GameState.PLAYING);
+
+        if (message.getAttackRow() >= 0 && message.getAttackCol() >= 0) {
+            System.out.println("📍 Napad na [" + message.getAttackRow() + ", " + message.getAttackCol() + "]");
+
+            // FIX: Za multi, napadi ide na player1 (JA)
+            Player myPlayer = isPlayer1() ? player1 : player2;
+
+            Cell cell = myPlayer.getBoard().getCell(message.getAttackRow(), message.getAttackCol());
+
+            if (cell.getState() == CellState.EMPTY || cell.getState() == CellState.SHIP) {
+                cell.attack();
+            }
+
+            // Crtaj na player1Board (moji brodovi)
+            Rectangle targetCell = findCellInGrid(player1Board, message.getAttackRow(), message.getAttackCol());
+
+            if (targetCell != null) {
+                targetCell.getStyleClass().clear();
+                targetCell.getStyleClass().add("cell-rectangle");
+
+                if (cell.getState() == CellState.HIT) {
+                    targetCell.getStyleClass().add("cell-hit");
+                    gameStatusLabel.setText("💥 Pogođeno!");
+                } else if (cell.getState() == CellState.MISS) {
+                    targetCell.getStyleClass().add("cell-miss");
+                    gameStatusLabel.setText("💧 Promašaj!");
+                }
+            }
+        }
+
+        boardLocked = false;
+        currentPlayerLabel.setText("🔴 TVOJ RED!");
+        gameStatusLabel.setText("Sada je tvoj red!");
     }
 
     private void setupEventHandlers() {
         resetButton.setOnAction(e -> handleReset());
         placeRandomShipsBtn.setOnAction(e -> handlePlaceRandomShips());
+        readyButton.setOnAction(e -> handleReady());
         startGameBtn.setOnAction(e -> handleStartGame());
         saveGameBtn.setOnAction(e -> handleSaveGame());
         horizontalBtn.setOnAction(e -> handleOrientationToggle());
         verticalBtn.setOnAction(e -> handleOrientationToggle());
-    }
-
-    public void restoreGameState(GameStateMessage gameStateMessage) {
     }
 }

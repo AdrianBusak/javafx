@@ -2,9 +2,10 @@ package hr.algebra.battleship.model.game;
 
 import hr.algebra.battleship.model.enums.GameState;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class GameData {
+public class GameData implements Serializable {
     private List<Player> players;
     private int currentPlayerIndex;
     private GameState gameState;

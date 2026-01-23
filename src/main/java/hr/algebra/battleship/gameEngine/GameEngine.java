@@ -29,7 +29,6 @@ public class GameEngine {
         return instance;
     }
 
-    // ✅ DODAJ OVO - za resetiranje singleton-a
     public static void resetInstance() {
         instance = null;
     }
@@ -85,35 +84,43 @@ public class GameEngine {
                 .allMatch(p -> p.getBoard().getShips().size() >= 5);
     }
 
+    // ✅ ISPRAVLJENA attack() metoda
     public AttackResult attack(int x, int y) {
+        // ✅ Dobij trenutnog i protivničkog igrača
         Player currentPlayer = gameData.getPlayers()
                 .get(gameData.getCurrentPlayerIndex());
         Player opponent = gameData.getPlayers()
                 .get((gameData.getCurrentPlayerIndex() + 1) % 2);
 
+        System.out.println("🎯 Attack na [" + x + ", " + y + "]");
+        System.out.println("   Trenutni igrač: " + currentPlayer.getName());
+        System.out.println("   Protivnik: " + opponent.getName());
+        System.out.println("   Protivnikov board brodova: " + opponent.getBoard().getShips().size());
+
         Cell targetCell = opponent.getBoard().getCell(x, y);
 
-        if (targetCell.getState() == CellState.HIT || targetCell.getState() == CellState.MISS) {
-            return AttackResult.ALREADY_ATTACKED;
-        }
-
-        if (targetCell.getState() == CellState.SHIP) {
-            targetCell.markAsHit();
-            Ship hitShip = targetCell.getShip();
-
-            if (isShipSunk(hitShip)) {
-                if (areAllShipsSunk(opponent)) {
-                    gameData.setGameState(GameState.GAME_OVER);
-                    return AttackResult.WIN;
-                }
-                return AttackResult.SUNK;
-            }
-            return AttackResult.HIT;
-        } else {
-            targetCell.markAsMiss();
+        if (targetCell == null) {
+            System.err.println("❌ Ćelija je null!");
             return AttackResult.MISS;
         }
+
+        System.out.println("   Stanje ćelije prije: " + targetCell.getState());
+
+        // ✅ Koristi cell.attack()
+        AttackResult result = targetCell.attack();
+
+        System.out.println("   Rezultat: " + result);
+        System.out.println("   Stanje ćelije nakon: " + targetCell.getState());
+
+        // ✅ Ako je SUNK - provjeri WIN
+        if (result == AttackResult.SUNK && areAllShipsSunk(opponent)) {
+            gameData.setGameState(GameState.GAME_OVER);
+            return AttackResult.WIN;
+        }
+
+        return result;
     }
+
 
     private List<Ship> createStandardFleet() {
         return Arrays.asList(
@@ -123,16 +130,6 @@ public class GameEngine {
                 new Submarine(),
                 new Destroyer()
         );
-    }
-
-    private boolean isShipSunk(Ship ship) {
-        for (Cell cell : ship.getCells()) {
-            if (cell.getState() != CellState.HIT) {
-                return false;
-            }
-        }
-        ship.setSunk(true);
-        return true;
     }
 
     private boolean areAllShipsSunk(Player player) {

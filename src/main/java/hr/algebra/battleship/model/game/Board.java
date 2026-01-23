@@ -4,11 +4,12 @@ import hr.algebra.battleship.model.enums.CellState;
 import hr.algebra.battleship.model.enums.Orientation;
 import hr.algebra.battleship.model.ships.Ship;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class Board {
+public class Board implements Serializable {
     private static final int SIZE = 10;
     private Cell[][] grid;
     private List<Ship> ships;

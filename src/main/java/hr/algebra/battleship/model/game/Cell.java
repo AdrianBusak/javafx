@@ -4,7 +4,9 @@ import hr.algebra.battleship.model.enums.AttackResult;
 import hr.algebra.battleship.model.enums.CellState;
 import hr.algebra.battleship.model.ships.Ship;
 
-public class Cell {
+import java.io.Serializable;
+
+public class Cell implements Serializable {
     private int x;
     private int y;
     private CellState state;
