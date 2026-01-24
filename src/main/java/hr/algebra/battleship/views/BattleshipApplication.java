@@ -10,6 +10,7 @@ import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+
 import javax.swing.*;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -61,7 +62,7 @@ public class BattleshipApplication extends Application {
         }
 
         String firstCommandLineArg = args[0];
-        Boolean playerTypeExists = false;
+        boolean playerTypeExists = false;
 
         for (PlayerType pt : PlayerType.values()) {
             if (firstCommandLineArg.equals(pt.toString())) {
@@ -105,11 +106,14 @@ public class BattleshipApplication extends Application {
 
             // ✅ Ažuriraj igru na UI threadу
             Platform.runLater(() -> {
-                boardController.restoreGameState(gameStateMessage);
+                if (boardController != null) {
+                    boardController.restoreGameState(gameStateMessage);
+                }
             });
 
             System.out.println("✅ GameState primljen od protivnika");
             oos.writeObject("Primljeno");
+            oos.flush();
 
         } catch (IOException | ClassNotFoundException e) {
             System.err.println("❌ Greška pri primanju: " + e.getMessage());
@@ -160,6 +164,7 @@ public class BattleshipApplication extends Application {
         ObjectOutputStream oos = new ObjectOutputStream(client.getOutputStream());
         ObjectInputStream ois = new ObjectInputStream(client.getInputStream());
         oos.writeObject(gameStateMessage);
+        oos.flush();
         System.out.println("📨 GameState poslano protivniku");
         System.out.println("✅ " + ois.readObject());
     }

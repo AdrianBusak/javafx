@@ -2,6 +2,7 @@ module hr.algebra.battleship {
     requires javafx.controls;
     requires javafx.fxml;
     requires java.desktop;
+    requires java.naming;
 
     // ✅ BITNO - jer koristiš hr.algebra.battleship.views paket
     opens hr.algebra.battleship.views to javafx.fxml;
