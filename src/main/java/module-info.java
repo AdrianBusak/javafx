@@ -3,6 +3,8 @@ module hr.algebra.battleship {
     requires javafx.fxml;
     requires java.desktop;
     requires java.naming;
+    requires static lombok;
+    requires java.management;
 
     // ✅ BITNO - jer koristiš hr.algebra.battleship.views paket
     opens hr.algebra.battleship.views to javafx.fxml;

@@ -74,7 +74,7 @@
             <children>
                 <!-- LIJEVO: Tvoj Board (gdje protivnik napada) -->
                 <VBox spacing="10" alignment="TOP_CENTER">
-                    <Label text="🛡️ Tvoj Board"
+                    <Label fx:id="player1BoardLabel" text="🛡️ Tvoj Board"
                            style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #333;"/>
                     <GridPane fx:id="player1Board" hgap="1" vgap="1"
                               style="-fx-background-color: transparent;">
@@ -100,7 +100,7 @@
 
                 <!-- DESNO: Protivnički Board (gdje ti napadas) -->
                 <VBox spacing="10" alignment="TOP_CENTER">
-                    <Label text="🎯 Protivnički Board"
+                    <Label fx:id="player2BoardLabel" text="🎯 Protivnički Board"
                            style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #333;"/>
                     <GridPane fx:id="player2Board" hgap="1" vgap="1"
                               style="-fx-background-color: transparent;">
@@ -109,7 +109,7 @@
             </children>
         </HBox>
 
-        <!-- Kontrole -->
+        <!-- ✅ Kontrole - Game Actions -->
         <HBox spacing="15" alignment="CENTER" style="-fx-padding: 15; -fx-background-color: #f5f5f5; -fx-border-radius: 5;">
             <children>
                 <Button fx:id="placeRandomShipsBtn" text="🎲 Postavi Random Brodove"
@@ -121,6 +121,12 @@
 
                 <Button fx:id="saveGameBtn" text="💾 Spremi Igru"
                         style="-fx-padding: 10px 20px; -fx-background-color: #FF9800; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;"/>
+
+                <Button fx:id="loadGameBtn" text="📂 Učitaj Igru"
+                        style="-fx-padding: 10px 20px; -fx-background-color: #2196F3; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;"/>
+
+                <Button fx:id="historyBtn" text="📋 Dokumentacija"
+                        style="-fx-padding: 10px 20px; -fx-background-color: #FF5722; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;"/>
             </children>
         </HBox>
     </children>
