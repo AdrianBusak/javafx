@@ -5,8 +5,8 @@ module hr.algebra.battleship {
     requires java.naming;
     requires static lombok;
     requires java.management;
+    requires java.rmi;
 
-    // ✅ BITNO - jer koristiš hr.algebra.battleship.views paket
     opens hr.algebra.battleship.views to javafx.fxml;
     opens hr.algebra.battleship.controller to javafx.fxml;
 
@@ -17,4 +17,6 @@ module hr.algebra.battleship {
     exports hr.algebra.battleship.model.ships;
     exports hr.algebra.battleship.model.enums;
     exports hr.algebra.battleship.services;
+    exports hr.algebra.battleship.rmi;
+
 }

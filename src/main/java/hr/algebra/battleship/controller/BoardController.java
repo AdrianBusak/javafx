@@ -3,16 +3,18 @@ package hr.algebra.battleship.controller;
 import hr.algebra.battleship.gameEngine.GameEngine;
 import hr.algebra.battleship.model.enums.*;
 import hr.algebra.battleship.model.game.*;
+import hr.algebra.battleship.model.game.Cell;
 import hr.algebra.battleship.model.ships.*;
+import hr.algebra.battleship.rmi.ChatRemoteService;
 import hr.algebra.battleship.services.*;
+import hr.algebra.battleship.utils.ChatUtils;
 import hr.algebra.battleship.utils.GameUtils;
 import hr.algebra.battleship.utils.DocumentationUtils;
 import hr.algebra.battleship.views.BattleshipApplication;
+import javafx.animation.Timeline;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ToggleButton;
+import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.shape.Rectangle;
@@ -37,11 +39,21 @@ public class BoardController implements Initializable {
     @FXML private Button carrierBtn, battleshipBtn, cruiserBtn, submarineBtn, destroyerBtn;
     @FXML private ToggleButton horizontalBtn, verticalBtn;
 
+    @FXML private TextField chatInputField;
+    @FXML private TextArea chatDisplayArea;
+    @FXML private Button sendChatBtn;
+
+    private ChatRemoteService chatService;
+    private String playerName;
+
     private GameEngine gameEngine;
     private TurnService turnService;
     private BoardUIService boardUIService;
     private GameSetupService gameSetupService;
     private CellVisualizationService visualizationService;
+
+    private Timeline chatRefreshTimeline;
+
 
     private GameData gameData;
     private Player player1, player2;
@@ -63,12 +75,39 @@ public class BoardController implements Initializable {
         gameSetupService = new GameSetupService(gameEngine, gameData);
         boardUIService = new BoardUIService();
         visualizationService = new CellVisualizationService(boardUIService);
-
+        initializeChat();
         initializeBoards();
         setupEventHandlers();
         updateBoardLabelsForCurrentPlayer();
         resetGame();
+
+
     }
+
+    private void initializeChat() {
+        try {
+            // ✅ Inicijalizuj chatService
+            Optional<ChatRemoteService> chatRemoteServiceOptional = ChatUtils.initializeChatRemoteService();
+
+            if (chatRemoteServiceOptional.isPresent()) {
+                chatService = chatRemoteServiceOptional.get();
+                playerName = isPlayer1() ? "Igrač 1" : "Igrač 2";
+                chatDisplayArea.appendText("💬 Chat spojen!\n");
+
+                // ✅ KRENI S REFRESH TIMELINE-OM OVDJE
+                chatRefreshTimeline = ChatUtils.getChatRefreshTimeline(chatService, chatDisplayArea);
+                chatRefreshTimeline.play();
+
+            } else {
+                chatDisplayArea.appendText("❌ RMI servis nije dostupan!\n");
+            }
+
+        } catch (Exception e) {
+            chatDisplayArea.appendText("❌ Chat greška: " + e.getMessage() + "\n");
+            System.err.println("Chat connection error: " + e.getMessage());
+        }
+    }
+
 
     private void initializeBoards() {
         boardUIService.createBoardGrid(player1Board, false, this::handleCellClick);
@@ -86,6 +125,18 @@ public class BoardController implements Initializable {
 
     private boolean isPlayer1() {
         return BattleshipApplication.playerType == PlayerType.PLAYER_1;
+    }
+
+    //============== CHAT =========================
+    @FXML
+    private void handleSendChat() {
+        try {
+            ChatUtils.sendChatMessage(chatService, chatInputField);
+
+            chatInputField.clear();
+        } catch (Exception e) {
+            chatDisplayArea.appendText("❌ Greška slanja: " + e.getMessage() + "\n");
+        }
     }
 
     // ============= PERSISTENCE HANDLERS ✅ =============
@@ -760,5 +811,7 @@ public class BoardController implements Initializable {
         historyBtn.setOnAction(e -> handleGenerateDocumentation());
         horizontalBtn.setOnAction(e -> handleOrientationToggle());
         verticalBtn.setOnAction(e -> handleOrientationToggle());
+        sendChatBtn.setOnAction(e -> handleSendChat());
+        chatInputField.setOnAction(e -> handleSendChat());
     }
 }

@@ -23,9 +23,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Utility klasa za XML serijalizaciju game move-a s DOM parserom
- */
 public class XmlUtils {
 
     private static final String DOCTYPE = "DOCTYPE";
@@ -35,9 +32,7 @@ public class XmlUtils {
 
     private XmlUtils() {}
 
-    /**
-     * Sprema novi potez u XML datoteku
-     */
+
     public static void saveNewMove(GameMove gameMove) {
         List<GameMove> gameMoveList;
         try {
@@ -96,7 +91,6 @@ public class XmlUtils {
 
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 
-        // ✅ DISABLIRAJ DTD VALIDACIJU
         factory.setValidating(false);
         try {
             factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
@@ -207,7 +201,6 @@ public class XmlUtils {
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
         transformer.setOutputProperty(OutputKeys.METHOD, "xml");
         transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-        // ✅ NE ispisuj DOCTYPE
         transformer.transform(new DOMSource(document), new StreamResult(new File(filename)));
     }
 
