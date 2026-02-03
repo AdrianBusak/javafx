@@ -20,11 +20,10 @@ public class DocumentationUtils {
     private static final String CLASS_FILE_NAME_EXTENSION = ".class";
 
     public static void generateHtmlDocumentationFile() throws IOException {
-        // ✅ STVORI DIREKTORIJ AKO NE POSTOJI
         Path docDir = Paths.get("doc");
         if (!Files.exists(docDir)) {
             Files.createDirectories(docDir);
-            System.out.println("✅ Direktorij 'doc' je stvoren!");
+            System.out.println("Direktorij 'doc' je stvoren!");
         }
 
         Path start = Paths.get(PATH_WITH_CLASSES);
@@ -38,7 +37,7 @@ public class DocumentationUtils {
 
             String htmlString = generateHtmlDocumentationCode(classList);
             Files.writeString(Path.of(HTML_DOCUMENTATION_FILE_NAME), htmlString);
-            System.out.println("✅ Dokumentacija je uspješno generiirana!");
+            System.out.println("Dokumentacija je uspješno generiirana!");
         }
     }
 
@@ -50,7 +49,7 @@ public class DocumentationUtils {
                 <html>
                 <head>
                     <meta charset="UTF-8">
-                    <title>⚓ Battleship Dokumentacija</title>
+                    <title>Battleship Dokumentacija</title>
                     <style>
                         body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
                         .container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
@@ -64,7 +63,7 @@ public class DocumentationUtils {
                 </head>
                 <body>
                     <div class="container">
-                        <h1>⚓ BATTLESHIP - Dokumentacija</h1>
+                        <h1>BATTLESHIP - Dokumentacija</h1>
                         <p>Kompletan pregled svih klasa, konstruktora i metoda.</p>
                 """);
 
@@ -78,7 +77,7 @@ public class DocumentationUtils {
 
             if (!packageName.equals(currentPackage)) {
                 currentPackage = packageName;
-                html.append("<h2 class='package'>📦 ").append(packageName).append("</h2>\n");
+                html.append("<h2 class='package'> ").append(packageName).append("</h2>\n");
             }
 
             try {
@@ -90,17 +89,17 @@ public class DocumentationUtils {
                 // Konstruktori
                 if (clazz.getConstructors().length > 0) {
                     for (Constructor<?> constructor : clazz.getConstructors()) {
-                        html.append("<div class='constructor'>🔧 ").append(constructor).append("</div>\n");
+                        html.append("<div class='constructor'> ").append(constructor).append("</div>\n");
                     }
                 } else {
-                    html.append("<div class='constructor'>❌ Nema konstruktora</div>\n");
+                    html.append("<div class='constructor'> Nema konstruktora</div>\n");
                 }
 
                 // Metode
                 Method[] methods = clazz.getDeclaredMethods();
                 for (Method method : methods) {
                     if (java.lang.reflect.Modifier.isPublic(method.getModifiers())) {
-                        html.append("<div class='method'>⚙️ ").append(method).append("</div>\n");
+                        html.append("<div class='method'> ").append(method).append("</div>\n");
                     }
                 }
 
@@ -112,7 +111,7 @@ public class DocumentationUtils {
         html.append("""
                         <hr style="margin-top: 40px;">
                         <p style="text-align: center; color: #666; font-size: 12px;">
-                            Generirano automatski | ⚓ Battleship 2026
+                            Generirano automatski | Battleship 2026
                         </p>
                     </div>
                 </body>
