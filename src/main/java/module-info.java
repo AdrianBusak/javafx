@@ -7,10 +7,8 @@ module hr.algebra.battleship {
     requires java.management;
     requires java.rmi;
 
-    opens hr.algebra.battleship.views to javafx.fxml;
     opens hr.algebra.battleship.controller to javafx.fxml;
 
-    exports hr.algebra.battleship.views;
     exports hr.algebra.battleship.controller;
     exports hr.algebra.battleship.gameEngine;
     exports hr.algebra.battleship.model.game;
@@ -18,5 +16,7 @@ module hr.algebra.battleship {
     exports hr.algebra.battleship.model.enums;
     exports hr.algebra.battleship.services;
     exports hr.algebra.battleship.rmi;
+    exports hr.algebra.battleship;
+    opens hr.algebra.battleship to javafx.fxml;
 
 }

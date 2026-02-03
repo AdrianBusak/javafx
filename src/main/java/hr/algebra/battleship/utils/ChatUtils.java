@@ -4,7 +4,7 @@ import hr.algebra.battleship.exception.ChatActionException;
 import hr.algebra.battleship.jndi.ConfigurationKey;
 import hr.algebra.battleship.jndi.ConfigurationReader;
 import hr.algebra.battleship.rmi.ChatRemoteService;
-import hr.algebra.battleship.views.BattleshipApplication;
+import hr.algebra.battleship.BattleshipApplication;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;

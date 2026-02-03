@@ -1,4 +1,4 @@
-package hr.algebra.battleship.views;
+package hr.algebra.battleship;
 
 import hr.algebra.battleship.controller.BoardController;
 import hr.algebra.battleship.jndi.ConfigurationKey;
@@ -30,11 +30,10 @@ public class BattleshipApplication extends Application {
         Scene scene = new Scene(fxmlLoader.load(), 1400, 800);
         boardController = fxmlLoader.getController();
 
-        stage.setTitle("⚓ BATTLESHIP - " + playerType.toString());
+        stage.setTitle("BATTLESHIP - " + playerType.toString());
         stage.setScene(scene);
         stage.show();
 
-        // ✅ Ako nije single player, pokreni server thread
         if (!PlayerType.SINGLE_PLAYER.name().equals(playerType.name())) {
             if (PlayerType.PLAYER_2.name().equals(playerType.name())) {
                 Thread serverThread = new Thread(() -> acceptRequests(
@@ -72,7 +71,7 @@ public class BattleshipApplication extends Application {
         }
 
         if (!playerTypeExists) {
-            System.out.println("❌ Nepostojeća vrsta igrača: " + firstCommandLineArg);
+            System.out.println("Nepostojeća vrsta igrača: " + firstCommandLineArg);
             JOptionPane.showMessageDialog(null,
                     "Nepostojeća vrsta igrača: " + firstCommandLineArg);
             System.exit(0);
@@ -82,14 +81,13 @@ public class BattleshipApplication extends Application {
         }
     }
 
-    // ✅ Server sluša na portu
     private static void acceptRequests(Integer port) {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
-            System.err.printf("🛡️  Server sluša na portu: %d%n", serverSocket.getLocalPort());
+            System.err.printf("Server sluša na portu: %d%n", serverSocket.getLocalPort());
 
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                System.err.printf("📡 Klijent spojen sa porta %s%n", clientSocket.getPort());
+                System.err.printf("Klijent spojen sa porta %s%n", clientSocket.getPort());
                 new Thread(() -> processSerializableClient(clientSocket)).start();
             }
         } catch (IOException e) {
@@ -97,31 +95,28 @@ public class BattleshipApplication extends Application {
         }
     }
 
-    // ✅ Obradi primljenu poruku od protivnika
     private static void processSerializableClient(Socket clientSocket) {
         try (ObjectInputStream ois = new ObjectInputStream(clientSocket.getInputStream());
              ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream())) {
 
             GameStateMessage gameStateMessage = (GameStateMessage) ois.readObject();
 
-            // ✅ Ažuriraj igru na UI threadу
             Platform.runLater(() -> {
                 if (boardController != null) {
                     boardController.restoreGameState(gameStateMessage);
                 }
             });
 
-            System.out.println("✅ GameState primljen od protivnika");
+            System.out.println("GameState primljen od protivnika");
             oos.writeObject("Primljeno");
             oos.flush();
 
         } catch (IOException | ClassNotFoundException e) {
-            System.err.println("❌ Greška pri primanju: " + e.getMessage());
+            System.err.println("Greška pri primanju: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
-    // ✅ Player 1 šalje Player 2-u
     public static void sendRequestToPlayer2(GameStateMessage gameStateMessage) {
         new Thread(() -> {
             try (Socket clientSocket = new Socket(
@@ -129,18 +124,18 @@ public class BattleshipApplication extends Application {
                     ConfigurationReader.getIntegerValueForKey(
                             ConfigurationKey.PLAYER_2_SERVER_PORT))) {
 
-                System.err.printf("📤 Player 1 se spaja na %s:%d%n",
+                System.err.printf("Player 1 se spaja na %s:%d%n",
                         clientSocket.getInetAddress(), clientSocket.getPort());
 
                 sendSerializableRequest(clientSocket, gameStateMessage);
             } catch (IOException | ClassNotFoundException e) {
-                System.err.println("❌ Greška pri slanju Player 2: " + e.getMessage());
+                System.err.println("Greška pri slanju Player 2: " + e.getMessage());
                 e.printStackTrace();
             }
         }).start();
     }
 
-    // ✅ Player 2 šalje Player 1-u
+    // ✅ Plaer 2 šalje Player 1-u
     public static void sendRequestToPlayer1(GameStateMessage gameStateMessage) {
         new Thread(() -> {
             try (Socket clientSocket = new Socket(
@@ -148,12 +143,12 @@ public class BattleshipApplication extends Application {
                     ConfigurationReader.getIntegerValueForKey(
                             ConfigurationKey.PLAYER_1_SERVER_PORT))) {
 
-                System.err.printf("📤 Player 2 se spaja na %s:%d%n",
+                System.err.printf("Player 2 se spaja na %s:%d%n",
                         clientSocket.getInetAddress(), clientSocket.getPort());
 
                 sendSerializableRequest(clientSocket, gameStateMessage);
             } catch (IOException | ClassNotFoundException e) {
-                System.err.println("❌ Greška pri slanju Player 1: " + e.getMessage());
+                System.err.println("Greška pri slanju Player 1: " + e.getMessage());
                 e.printStackTrace();
             }
         }).start();
@@ -165,7 +160,7 @@ public class BattleshipApplication extends Application {
         ObjectInputStream ois = new ObjectInputStream(client.getInputStream());
         oos.writeObject(gameStateMessage);
         oos.flush();
-        System.out.println("📨 GameState poslano protivniku");
-        System.out.println("✅ " + ois.readObject());
+        System.out.println("GameState poslano protivniku");
+        System.out.println("" + ois.readObject());
     }
 }

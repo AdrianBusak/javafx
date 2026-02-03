@@ -9,9 +9,7 @@ import java.util.List;
 
 import static hr.algebra.battleship.utils.XmlUtils.loadGameMoves;
 
-/**
- * Thread za učitavanje zadnjeg poteza i ažuriranje UI-ja
- */
+
 public class LoadGameMovesThread extends AbstractGameMoveThread implements Runnable {
 
     private final Label label;

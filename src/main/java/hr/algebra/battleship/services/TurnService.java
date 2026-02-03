@@ -11,7 +11,6 @@ public class TurnService {
         this.gameData = gameData;
     }
 
-    // ✅ DODAJ OVO - setter za ažuriranje gameData nakon resetiranja
     public void setGameData(GameData gameData) {
         this.gameData = gameData;
     }

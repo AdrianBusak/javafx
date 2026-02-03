@@ -8,14 +8,10 @@ import javafx.geometry.VPos;
 import javafx.scene.layout.GridPane;
 import javafx.scene.shape.Rectangle;
 
-/**
- * Servis za upravljanje Board UI-jem
- */
+
 public class BoardUIService {
 
-    /**
-     * Kreiraj 10x10 grid
-     */
+
     public void createBoardGrid(GridPane gridPane, boolean isOpponent,
                                 CellClickHandler clickHandler) {
         for (int row = 0; row < 10; row++) {
@@ -30,28 +26,22 @@ public class BoardUIService {
         }
     }
 
-    /**
-     * Kreiraj jednu ćeliju
-     */
+
     private Rectangle createCell(int row, int col, boolean isOpponent,
                                  CellClickHandler clickHandler) {
         Rectangle cell = new Rectangle(35, 35);
         cell.getStyleClass().add("cell-rectangle");
         cell.setUserData(new CellData(row, col, isOpponent));
 
-        // Hover
         cell.setOnMouseEntered(e -> cell.getStyleClass().add("cell-hover"));
         cell.setOnMouseExited(e -> cell.getStyleClass().remove("cell-hover"));
 
-        // Click
         cell.setOnMouseClicked(e -> clickHandler.onCellClick(cell, row, col, isOpponent));
 
         return cell;
     }
 
-    /**
-     * Ažuriraj vizualni prikaz ćelije
-     */
+
     public void updateCellStyle(Rectangle cell, CellState state) {
         cell.getStyleClass().clear();
         cell.getStyleClass().add("cell-rectangle");
@@ -64,9 +54,7 @@ public class BoardUIService {
         }
     }
 
-    /**
-     * Ažuriraj sve ćelije boarda
-     */
+
     public void updateBoardVisuals(GridPane gridPane, Player player, boolean hideShips) {
         for (var child : gridPane.getChildren()) {
             if (child instanceof Rectangle rect) {
@@ -86,9 +74,7 @@ public class BoardUIService {
         }
     }
 
-    /**
-     * Očisti sve stilove
-     */
+
     public void clearBoardStyles(GridPane grid) {
         for (var child : grid.getChildren()) {
             if (child instanceof Rectangle rect) {
@@ -98,9 +84,7 @@ public class BoardUIService {
         }
     }
 
-    /**
-     * Nađi Rectangle u GridPane
-     */
+
     public Rectangle findCellInGrid(GridPane grid, int row, int col) {
         for (var child : grid.getChildren()) {
             Integer nodeRow = GridPane.getRowIndex(child);
@@ -113,9 +97,7 @@ public class BoardUIService {
         return null;
     }
 
-    /**
-     * Callback za klik na ćeliju
-     */
+
     public interface CellClickHandler {
         void onCellClick(Rectangle cell, int row, int col, boolean isOpponent);
     }

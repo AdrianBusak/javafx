@@ -23,10 +23,10 @@ public class ConfigurationReader {
         try (InitialDirContextCloseable context = new InitialDirContextCloseable(configurationProperties)) {
             Object configurationObject = context.lookup("config.txt");
             properties.load(new FileReader(configurationObject.toString()));
-            System.out.println("✅ Konfiguracija učitana via JNDI FSContext");
+            System.out.println("Konfiguracija učitana via JNDI FSContext");
         } catch (NamingException | IOException e) {
-            System.err.println("❌ Greška pri učitavanju konfiguracije: " + e.getMessage());
-            System.err.println("📍 Kreiraj datoteku: ./conf/config.txt");
+            System.err.println("Greška pri učitavanju konfiguracije: " + e.getMessage());
+            System.err.println("Kreiraj datoteku: ./conf/config.txt");
             System.err.println("Sadržaj:");
             System.err.println("hostname=localhost");
             System.err.println("player1.server.port=6000");

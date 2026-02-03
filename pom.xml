@@ -74,7 +74,7 @@
                     <execution>
                         <id>default-cli</id>
                         <configuration>
-                            <mainClass>hr.algebra.battleship/hr.algebra.battleship.views.BattleshipApplication</mainClass>
+                            <mainClass>hr.algebra.battleship/hr.algebra.battleship.BattleshipApplication</mainClass>
                             <launcher>app</launcher>
                             <jlinkZipName>app</jlinkZipName>
                             <jlinkImageName>app</jlinkImageName>

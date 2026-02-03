@@ -11,7 +11,7 @@ public class GameStateMessage implements Serializable {
     private int currentPlayerIndex;
     private int attackRow = -1;
     private int attackCol = -1;
-    private String attackResult; // ✅ DODAJ OVO
+    private String attackResult;
     private Board player1Board;
     private Board player2Board;
 
@@ -29,7 +29,6 @@ public class GameStateMessage implements Serializable {
     public int getAttackCol() { return attackCol; }
     public void setAttackCol(int attackCol) { this.attackCol = attackCol; }
 
-    // ✅ DODAJ OVE DVIJE METODE
     public String getAttackResult() { return attackResult; }
     public void setAttackResult(String attackResult) { this.attackResult = attackResult; }
 
@@ -47,8 +46,8 @@ public class GameStateMessage implements Serializable {
                 ", attackRow=" + attackRow +
                 ", attackCol=" + attackCol +
                 ", attackResult=" + attackResult +
-                ", player1Board=" + (player1Board != null ? "✓" : "✗") +
-                ", player2Board=" + (player2Board != null ? "✓" : "✗") +
+                ", player1Board=" + (player1Board != null ? "ok" : "nocando") +
+                ", player2Board=" + (player2Board != null ? "ok" : "nocando") +
                 '}';
     }
 }

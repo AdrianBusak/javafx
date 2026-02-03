@@ -6,9 +6,7 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 
-/**
- * Predstavlja jedan potez u igri BattleShip
- */
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

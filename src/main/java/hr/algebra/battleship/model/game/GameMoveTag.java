@@ -1,8 +1,6 @@
 package hr.algebra.battleship.model.game;
 
-/**
- * Enum za XML tagove game move-a
- */
+
 public enum GameMoveTag {
     GAME_MOVE("GameMove"),
     ROW("Row"),

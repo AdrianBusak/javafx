@@ -79,49 +79,6 @@ public class GameEngine {
         }
     }
 
-    public boolean isGameSetupComplete() {
-        return gameData.getPlayers().stream()
-                .allMatch(p -> p.getBoard().getShips().size() >= 5);
-    }
-
-    // ✅ ISPRAVLJENA attack() metoda
-    public AttackResult attack(int x, int y) {
-        // ✅ Dobij trenutnog i protivničkog igrača
-        Player currentPlayer = gameData.getPlayers()
-                .get(gameData.getCurrentPlayerIndex());
-        Player opponent = gameData.getPlayers()
-                .get((gameData.getCurrentPlayerIndex() + 1) % 2);
-
-        System.out.println("🎯 Attack na [" + x + ", " + y + "]");
-        System.out.println("   Trenutni igrač: " + currentPlayer.getName());
-        System.out.println("   Protivnik: " + opponent.getName());
-        System.out.println("   Protivnikov board brodova: " + opponent.getBoard().getShips().size());
-
-        Cell targetCell = opponent.getBoard().getCell(x, y);
-
-        if (targetCell == null) {
-            System.err.println("❌ Ćelija je null!");
-            return AttackResult.MISS;
-        }
-
-        System.out.println("   Stanje ćelije prije: " + targetCell.getState());
-
-        // ✅ Koristi cell.attack()
-        AttackResult result = targetCell.attack();
-
-        System.out.println("   Rezultat: " + result);
-        System.out.println("   Stanje ćelije nakon: " + targetCell.getState());
-
-        // ✅ Ako je SUNK - provjeri WIN
-        if (result == AttackResult.SUNK && areAllShipsSunk(opponent)) {
-            gameData.setGameState(GameState.GAME_OVER);
-            return AttackResult.WIN;
-        }
-
-        return result;
-    }
-
-
     private List<Ship> createStandardFleet() {
         return Arrays.asList(
                 new Carrier(),
@@ -130,11 +87,6 @@ public class GameEngine {
                 new Submarine(),
                 new Destroyer()
         );
-    }
-
-    private boolean areAllShipsSunk(Player player) {
-        return player.getBoard().getShips().stream()
-                .allMatch(Ship::isSunk);
     }
 
     public GameData getGameData() {

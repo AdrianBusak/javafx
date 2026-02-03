@@ -28,24 +28,13 @@ public class Board implements Serializable {
         }
     }
 
-    /**
-     * Postavi brod na ploču
-     *
-     * @param ship brod koji se postavlja
-     * @param startX početna X koordinata
-     * @param startY početna Y koordinata
-     * @param orientation orijentacija (HORIZONTAL ili VERTICAL)
-     * @return true ako je uspješno postavljeno, false inače
-     */
     public boolean placeShip(Ship ship, int startX, int startY,
                              Orientation orientation) {
 
-        // ✅ Validiraj sve - isValidPlacement() provjerava sve
         if (!isValidPlacement(ship, startX, startY, orientation)) {
             return false;
         }
 
-        // Kreiraj listu ćelija
         List<Cell> cellsToOccupy = new ArrayList<>();
         int size = ship.getType().getSize();
 
@@ -55,38 +44,32 @@ public class Board implements Serializable {
             if (orientation == Orientation.HORIZONTAL) {
                 x = startX;
                 y = startY + i;
-            } else {  // VERTICAL
+            } else {
                 x = startX + i;
                 y = startY;
             }
 
             Cell cell = grid[x][y];
             cellsToOccupy.add(cell);
-            cell.setState(CellState.SHIP);  // Označi da sadrži brod
+            cell.setState(CellState.SHIP);
             cell.setShip(ship);
         }
 
-        // Spremi ćelije u brod
-        ship.setCells(cellsToOccupy);  // ✅ Koristim setCells umjesto setOccupiedCells
+        ship.setCells(cellsToOccupy);
         ships.add(ship);
 
         return true;
     }
 
-    /**
-     * Provjeri je li postavljanje broda validno
-     * Provjerava: granice, preklapanja i susjedne brodove
-     */
+
     private boolean isValidPlacement(Ship ship, int startX, int startY,
                                      Orientation orientation) {
         int size = ship.getType().getSize();
 
-        // ✅ Provjera 1: Negativne koordinate
         if (startX < 0 || startY < 0) {
             return false;
         }
 
-        // Iterira kroz sve ćelije broda
         for (int i = 0; i < size; i++) {
             int cellX, cellY;
 
@@ -98,18 +81,15 @@ public class Board implements Serializable {
                 cellY = startY;
             }
 
-            // ✅ Provjera 2: Izvan granica
             if (cellX >= SIZE || cellY >= SIZE) {
                 return false;
             }
 
-            // ✅ Provjera 3: Preklapanje s drugim brodom
             if (grid[cellX][cellY].getState() == CellState.SHIP) {
                 return false;
             }
         }
 
-        // ✅ Provjera 4: Provjeri susjedne ćelije (bez dodira s drugim brodovima)
         for (int i = -1; i <= size; i++) {
             for (int dx = -1; dx <= 1; dx++) {
                 for (int dy = -1; dy <= 1; dy++) {
@@ -149,15 +129,8 @@ public class Board implements Serializable {
         return true;
     }
 
-    /**
-     * Dohvati ćeliju na određenim koordinatama
-     *
-     * @param x X koordinata
-     * @param y Y koordinata
-     * @return ćelija na zadatim koordinatama
-     */
+
     public Cell getCell(int x, int y) {
-        // ✅ Provjera granica
         if (x < 0 || x >= SIZE || y < 0 || y >= SIZE) {
             throw new IndexOutOfBoundsException(
                     "Koordinate moraju biti između 0 i " + (SIZE - 1)
@@ -166,31 +139,8 @@ public class Board implements Serializable {
         return grid[x][y];
     }
 
-    /**
-     * Dohvati neumodifiljivu listu svih brodova
-     *
-     * @return unmodifiable list od brodova
-     */
     public List<Ship> getShips() {
-        return Collections.unmodifiableList(ships);  // ✅ Zaštita
+        return Collections.unmodifiableList(ships);
     }
 
-    /**
-     * Provjeri je li svi brodovi potopljeni (pobjeda)
-     *
-     * @return true ako su svi brodovi potopljeni
-     */
-    public boolean areAllShipsSunk() {
-        return ships.stream()
-                .allMatch(Ship::checkIfSunk);
-    }
-
-    /**
-     * Dohvati veličinu ploče
-     *
-     * @return veličina ploče (10 za standardnu igru)
-     */
-    public static int getSize() {
-        return SIZE;
-    }
 }

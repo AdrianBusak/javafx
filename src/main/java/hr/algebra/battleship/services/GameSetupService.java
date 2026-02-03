@@ -20,14 +20,7 @@ public class GameSetupService {
         this.gameData = gameData;
     }
 
-    public void placeShipsForCurrentPlayer() {
-        if (gameData == null) {
-            throw new IllegalStateException("GameData nije inicijaliziran!");
-        }
-        gameEngine.placeRandomShipsForCurrentPlayer();
-    }
 
-    // ✅ NOVO - Postavi brodove za specifičnog igrača
     public void placeShipsForPlayer(Player player) {
         if (player == null || player.getBoard() == null) {
             throw new IllegalStateException("Player nije inicijaliziran!");
@@ -55,7 +48,7 @@ public class GameSetupService {
                 try {
                     placed = player.getBoard().placeShip(ship, row, col, orientation);
                 } catch (Exception e) {
-                    System.err.println("Greška: " + e.getMessage());
+                    System.err.println("Error: " + e.getMessage());
                 }
                 attempts++;
             }

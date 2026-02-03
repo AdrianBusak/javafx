@@ -5,9 +5,7 @@ import hr.algebra.battleship.model.game.GameMove;
 
 import java.io.FileNotFoundException;
 
-/**
- * Thread za spravljanje novog poteza u game moves datoteku
- */
+
 public class SaveGameMoveThread extends AbstractGameMoveThread implements Runnable {
 
     private final GameMove gameMove;
